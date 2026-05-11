@@ -44,7 +44,9 @@ export function SegmentationCanvas({
         aspectRatio: `${imgW}/${imgH}`,
         width: 'auto',
         maxWidth: '100%',
-        maxHeight: '70vh',
+        // On mobile keep the canvas shorter so the object panel below is reachable
+        // without excessive scrolling; desktop gets the full 70vh.
+        maxHeight: 'min(70vh, 100vw)',
       }}
     >
       {/* Main SVG layer */}
@@ -105,14 +107,18 @@ export function SegmentationCanvas({
           />
         ))}
 
-        {/* Click-to-deselect transparent overlay (behind polygons) — only when something selected */}
+        {/* Tap/click-to-deselect transparent overlay (behind polygons) — only when something selected */}
         {selectedId !== null && (
           <rect
             width={imgW}
             height={imgH}
             fill="transparent"
-            style={{ cursor: 'default', pointerEvents: 'all' }}
+            style={{ cursor: 'default', pointerEvents: 'all', touchAction: 'manipulation' }}
             onClick={onDeselect}
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              onDeselect();
+            }}
           />
         )}
       </svg>
@@ -167,13 +173,13 @@ export function SegmentationCanvas({
         </div>
       )}
 
-      {/* Deselect hint */}
+      {/* Deselect hint — min 44×44px tap target */}
       {selectedId !== null && (
         <button
           onClick={onDeselect}
-          className="absolute top-3 right-3 z-20 flex items-center gap-1.5 bg-zinc-900/80 backdrop-blur-sm border border-zinc-700/50 text-zinc-400 hover:text-zinc-200 text-xs px-2.5 py-1.5 rounded-lg transition-colors duration-150"
+          className="absolute top-2 right-2 md:top-3 md:right-3 z-20 min-h-[44px] min-w-[44px] flex items-center justify-center gap-1.5 bg-zinc-900/80 backdrop-blur-sm border border-zinc-700/50 text-zinc-400 hover:text-zinc-200 active:text-zinc-200 text-xs px-3 py-2 rounded-lg transition-colors duration-150"
         >
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
           Clear

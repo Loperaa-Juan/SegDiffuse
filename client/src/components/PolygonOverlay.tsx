@@ -25,6 +25,19 @@ export function PolygonOverlay({
 
   if (isHidden) return null;
 
+  const handleTouchStart = () => {
+    // Mirror hover state on touch so the visual highlight activates immediately
+    onMouseEnter();
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent<SVGPolygonElement>) => {
+    // Prevent the synthesised mouse click that browsers fire after touchend
+    // (300ms delay) — we fire onClick ourselves immediately.
+    e.preventDefault();
+    onMouseLeave();
+    onClick();
+  };
+
   return (
     <polygon
       points={points}
@@ -34,10 +47,12 @@ export function PolygonOverlay({
       strokeLinejoin="round"
       opacity={isSelected ? 1 : isHovered ? 0.95 : 0.8}
       className="polygon-transition cursor-pointer"
-      style={{ pointerEvents: 'all' }}
+      style={{ pointerEvents: 'all', touchAction: 'manipulation' }}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       onClick={onClick}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
     />
   );
 }

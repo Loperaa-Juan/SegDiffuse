@@ -22,8 +22,8 @@ export function ObjectPanel({ objects, selectedId, onSelect, onDeselect }: Objec
         </p>
       </div>
 
-      {/* Object list */}
-      <div className="flex flex-col gap-2 overflow-y-auto max-h-[520px] pr-0.5">
+      {/* Object list — on desktop capped at 520px; on mobile let it expand naturally */}
+      <div className="flex flex-col gap-2 md:overflow-y-auto md:max-h-[520px] pr-0.5">
         {objects.map((obj) => {
           const isSelected = selectedId === obj.id;
           return (
@@ -31,11 +31,13 @@ export function ObjectPanel({ objects, selectedId, onSelect, onDeselect }: Objec
               key={obj.id}
               onClick={() => (isSelected ? onDeselect() : onSelect(obj.id))}
               className={[
-                'group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left',
+                'group relative w-full flex items-center gap-3 px-3 rounded-xl text-left',
+                // min-h-[44px] satisfies iOS HIG tap target; py-3 ensures label text is comfortably padded
+                'min-h-[44px] py-3',
                 'border transition-all duration-150',
                 isSelected
                   ? 'border-zinc-600/80 bg-zinc-800/80'
-                  : 'border-zinc-800 bg-zinc-900/60 hover:border-zinc-700 hover:bg-zinc-800/50',
+                  : 'border-zinc-800 bg-zinc-900/60 hover:border-zinc-700 hover:bg-zinc-800/50 active:border-zinc-700 active:bg-zinc-800/50',
               ].join(' ')}
               style={
                 isSelected
@@ -109,7 +111,7 @@ export function ObjectPanel({ objects, selectedId, onSelect, onDeselect }: Objec
           </div>
 
           <button
-            className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg text-sm font-medium text-white transition-all duration-150 active:scale-[0.97]"
+            className="w-full flex items-center justify-center gap-2 min-h-[44px] py-2.5 px-4 rounded-lg text-sm font-medium text-white transition-all duration-150 active:scale-[0.97]"
             style={{ backgroundColor: selectedObj.color.raw }}
             onClick={() => {
               // Placeholder: trigger inpainting with selectedObj.id
