@@ -25,22 +25,19 @@ class InpaintingEngine:
                 settings.device,
             )
 
-        dtype = torch.float16 if device.startswith("cuda") else torch.float32
-
-        logger.info("Device: %s | dtype: %s", device, dtype)
+        logger.info("Device: %s | dtype: %s", device, torch.float16)
 
         t0 = time.perf_counter()
         self._pipe = StableDiffusionInpaintPipeline.from_pretrained(
             settings.model_path,
-            torch_dtype=dtype,
+            torch_dtype=torch.float16,
             safety_checker=None,
             requires_safety_checker=False,
         ).to(device)
-        if dtype == torch.float16:
-            self._pipe.vae.to(dtype=torch.float32)
+
         logger.info("Pipeline ready in %.2fs", time.perf_counter() - t0)
 
-        self._device = device
+        # self._device = device
 
     def predict(
         self, image: Image.Image, mask: Image.Image, prompt: str
@@ -48,7 +45,7 @@ class InpaintingEngine:
         """Run stable-diffusion inpainting on a RGB image with a RGB mask."""
         original_size = image.size
 
-        generator = torch.Generator(device="cuda").manual_seed(0)
+        generator = torch.Generator(device=self._device).manual_seed(0)
 
         size = (settings.img_size, settings.img_size)
         image_resized = image.resize(size)

@@ -85,7 +85,7 @@ async def inpaint_image(
     mask_bytes = await mask.read()
 
     image_pil = Image.open(io.BytesIO(image_bytes)).convert("RGB")
-    mask_pil = Image.open(io.BytesIO(mask_bytes)).convert("RGB")
+    mask_pil = Image.open(io.BytesIO(mask_bytes)).convert("L")
 
     result = request.app.state.inpainter.predict(image_pil, mask_pil, prompt)
 
