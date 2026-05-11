@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     # Core
     service_name: str = "segementation_service"
     host: str = "0.0.0.0"
-    port: int = 8000
+    port: int = 8080
     log_level: str = "INFO"
 
     # Inference

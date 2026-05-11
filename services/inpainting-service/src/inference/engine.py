@@ -4,10 +4,10 @@ import logging
 import time
 
 import torch
+from config.service.settings import settings
 from diffusers import StableDiffusionInpaintPipeline
 from PIL import Image
 
-from config.service.settings import settings
 from src.models import InpaintingResult
 
 logger = logging.getLogger(__name__)
@@ -37,7 +37,7 @@ class InpaintingEngine:
 
         logger.info("Pipeline ready in %.2fs", time.perf_counter() - t0)
 
-        # self._device = device
+        self._device = device
 
     def predict(
         self, image: Image.Image, mask: Image.Image, prompt: str

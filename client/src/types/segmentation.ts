@@ -32,4 +32,13 @@ export type AppPhase =
   | 'preview'
   | 'segmenting'
   | 'segmented'
-  | 'selected';
+  | 'selected'
+  | 'prompting'
+  | 'inpainting'
+  | 'inpainted';
+
+export interface InpaintingResult {
+  imageUrl: string;
+  prompt: string;
+  objectId: number;
+}

@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { AppPhase, DetectedObject } from './types/segmentation';
+import type { AppPhase, DetectedObject, InpaintingResult } from './types/segmentation';
 import { useSegmentation } from './hooks/useSegmentation';
+import { useInpainting } from './hooks/useInpainting';
 import { UploadArea } from './components/UploadArea';
 import { SegmentationCanvas } from './components/SegmentationCanvas';
 import { ObjectPanel } from './components/ObjectPanel';
+import { InpaintPromptModal } from './components/InpaintPromptModal';
+import { InpaintingResultView } from './components/InpaintingResultView';
 
 export default function App() {
   const [phase, setPhase] = useState<AppPhase>('upload');
@@ -11,8 +14,10 @@ export default function App() {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [objects, setObjects] = useState<DetectedObject[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [inpaintingResult, setInpaintingResult] = useState<InpaintingResult | null>(null);
 
-  const { isLoading, error, segment } = useSegmentation();
+  const { error, segment } = useSegmentation();
+  const { error: inpaintError, inpaint, reset: resetInpaintError } = useInpainting();
 
   // Clean up object URL on unmount or file change
   useEffect(() => {
@@ -20,6 +25,13 @@ export default function App() {
       if (imageUrl) URL.revokeObjectURL(imageUrl);
     };
   }, [imageUrl]);
+
+  // Clean up the inpainted result URL when it changes or unmounts
+  useEffect(() => {
+    return () => {
+      if (inpaintingResult) URL.revokeObjectURL(inpaintingResult.imageUrl);
+    };
+  }, [inpaintingResult]);
 
   const handleUpload = useCallback((file: File) => {
     if (imageUrl) URL.revokeObjectURL(imageUrl);
@@ -52,14 +64,59 @@ export default function App() {
 
   const handleReset = useCallback(() => {
     if (imageUrl) URL.revokeObjectURL(imageUrl);
+    if (inpaintingResult) URL.revokeObjectURL(inpaintingResult.imageUrl);
     setImageFile(null);
     setImageUrl(null);
     setObjects([]);
     setSelectedId(null);
+    setInpaintingResult(null);
     setPhase('upload');
-  }, [imageUrl]);
+  }, [imageUrl, inpaintingResult]);
 
-  const isSegmentedPhase = phase === 'segmented' || phase === 'selected';
+  const handleStartInpaint = useCallback((id: number) => {
+    setSelectedId(id);
+    resetInpaintError();
+    setPhase('prompting');
+  }, [resetInpaintError]);
+
+  const handleCancelPrompt = useCallback(() => {
+    setPhase(selectedId !== null ? 'selected' : 'segmented');
+  }, [selectedId]);
+
+  const handleSubmitPrompt = useCallback(async (prompt: string) => {
+    if (!imageFile || selectedId === null) return;
+    const target = objects.find((o) => o.id === selectedId);
+    if (!target) return;
+
+    setPhase('inpainting');
+    const resultUrl = await inpaint({
+      imageFile,
+      maskBase64: target.mask,
+      prompt,
+    });
+
+    if (resultUrl) {
+      if (inpaintingResult) URL.revokeObjectURL(inpaintingResult.imageUrl);
+      setInpaintingResult({ imageUrl: resultUrl, prompt, objectId: target.id });
+      setPhase('inpainted');
+    } else {
+      setPhase('prompting');
+    }
+  }, [imageFile, selectedId, objects, inpaint, inpaintingResult]);
+
+  const handleTryAgain = useCallback(() => {
+    resetInpaintError();
+    setPhase('prompting');
+  }, [resetInpaintError]);
+
+  const handleBackToSelection = useCallback(() => {
+    if (inpaintingResult) URL.revokeObjectURL(inpaintingResult.imageUrl);
+    setInpaintingResult(null);
+    setPhase(selectedId !== null ? 'selected' : 'segmented');
+  }, [inpaintingResult, selectedId]);
+
+  const isSegmentedPhase = phase === 'segmented' || phase === 'selected' || phase === 'prompting';
+  const selectedObject = selectedId !== null ? objects.find((o) => o.id === selectedId) ?? null : null;
 
   return (
     <div className="min-h-screen bg-zinc-950 flex flex-col">
@@ -189,6 +246,17 @@ export default function App() {
                     ? 'Tap the canvas or Clear to deselect'
                     : 'Tap a polygon to select an object'}
                 </p>
+                <div className="mt-4 flex justify-center">
+                  <button
+                    onClick={handleReset}
+                    className="min-h-[44px] flex items-center justify-center gap-2 px-4 py-2.5 text-sm text-zinc-400 hover:text-zinc-200 active:text-zinc-200 border border-zinc-700 hover:border-zinc-600 active:border-zinc-600 rounded-lg transition-all duration-150"
+                  >
+                    <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 7.5m0 0L7.5 12M12 7.5v9" />
+                    </svg>
+                    Use another photo
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -199,11 +267,60 @@ export default function App() {
                 selectedId={selectedId}
                 onSelect={handleSelect}
                 onDeselect={handleDeselect}
+                onInpaint={handleStartInpaint}
               />
             </div>
           </div>
         )}
+
+        {/* Inpainting in progress */}
+        {phase === 'inpainting' && imageUrl && (
+          <div className="flex-1 flex flex-col items-center justify-center gap-6 px-6 py-10 animate-fade-in">
+            <div className="relative max-w-2xl w-full opacity-60">
+              <img
+                src={imageUrl}
+                alt="Inpainting"
+                className="w-full rounded-xl shadow-2xl object-contain max-h-[60vh]"
+              />
+              <div className="absolute inset-0 rounded-xl bg-zinc-950/40 flex items-center justify-center">
+                <div className="flex flex-col items-center gap-3">
+                  <div className="w-8 h-8 border-2 border-zinc-700 border-t-indigo-400 rounded-full animate-spin" />
+                  <p className="text-sm text-zinc-400">Generating inpainting…</p>
+                  <p className="text-xs text-zinc-600">This may take ~30s</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Inpainted result */}
+        {phase === 'inpainted' && imageUrl && inpaintingResult && (
+          <InpaintingResultView
+            originalUrl={imageUrl}
+            result={inpaintingResult}
+            onTryAgain={handleTryAgain}
+            onBackToSelection={handleBackToSelection}
+          />
+        )}
       </main>
+
+      {/* Prompt modal */}
+      {phase === 'prompting' && selectedObject && (
+        <InpaintPromptModal
+          object={selectedObject}
+          onCancel={handleCancelPrompt}
+          onSubmit={handleSubmitPrompt}
+        />
+      )}
+
+      {/* Inpaint error toast */}
+      {inpaintError && (phase === 'prompting' || phase === 'selected') && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[60] max-w-md w-[calc(100%-2rem)] animate-slide-up">
+          <div className="text-sm text-red-300 bg-red-950/90 border border-red-500/40 px-4 py-3 rounded-lg shadow-2xl backdrop-blur-sm">
+            {inpaintError}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
