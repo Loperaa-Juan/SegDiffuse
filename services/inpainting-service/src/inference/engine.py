@@ -5,8 +5,9 @@ import time
 
 import torch
 from config.service.settings import settings
-from diffusers import StableDiffusionInpaintPipeline
+from diffusers import FluxFillPipeline
 from PIL import Image
+from torchao.quantization import float8_dynamic_activation_float8_weight, quantize_
 
 from src.models import InpaintingResult
 
@@ -25,29 +26,37 @@ class InpaintingEngine:
                 settings.device,
             )
 
-        logger.info("Device: %s | dtype: %s", device, torch.float16)
+        logger.info("Device: %s | dtype: bfloat16", device)
 
         t0 = time.perf_counter()
-        self._pipe = StableDiffusionInpaintPipeline.from_pretrained(
+        self._pipe = FluxFillPipeline.from_pretrained(
             settings.model_path,
-            torch_dtype=torch.float16,
-            safety_checker=None,
-            requires_safety_checker=False,
+            torch_dtype=torch.bfloat16,
         ).to(device)
 
         logger.info("Pipeline ready in %.2fs", time.perf_counter() - t0)
+
+        quantize_(self._pipe.transformer, float8_dynamic_activation_float8_weight())
+        logger.info("Transformer quantized to fp8 (dynamic activation + weight)")
+
+        # Compile the transformer for faster repeated inference (CUDA graphs).
+        # The first request will be slow (~2-5 min) while the kernel is compiled;
+        # every subsequent request benefits from the cached compiled graph.
+        self._pipe.transformer = torch.compile(
+            self._pipe.transformer,
+            mode="reduce-overhead",
+            fullgraph=True,
+        )
+        logger.info("Transformer compiled with torch.compile (reduce-overhead)")
 
         self._device = device
 
     def predict(
         self, image: Image.Image, mask: Image.Image, prompt: str
     ) -> InpaintingResult:
-        """Run stable-diffusion inpainting on a RGB image with a RGB mask."""
         original_size = image.size
 
-        generator = torch.Generator(device=self._device).manual_seed(0)
-
-        size = (settings.img_size, settings.img_size)
+        size = (settings.img_width, settings.img_height)
         image_resized = image.resize(size)
         mask_resized = mask.resize(size)
 
@@ -55,10 +64,12 @@ class InpaintingEngine:
             prompt=prompt,
             image=image_resized,
             mask_image=mask_resized,
+            height=settings.img_height,
+            width=settings.img_width,
             guidance_scale=settings.guidance_scale,
             num_inference_steps=settings.num_inference_steps,
-            generator=generator,
-            num_images_per_prompt=1,
+            max_sequence_length=settings.max_sequence_length,
+            generator=torch.Generator("cpu").manual_seed(0),
         ).images[0]
 
         final = output.resize(original_size)
