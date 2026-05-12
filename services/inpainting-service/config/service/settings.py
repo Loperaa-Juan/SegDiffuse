@@ -10,10 +10,12 @@ class Settings(BaseSettings):
 
     # Inference
     device: str = "cuda:0"
-    model_path: str = "runwayml/stable-diffusion-inpainting"
-    img_size: int = 512
-    guidance_scale: float = 7.5
-    num_inference_steps: int = 50
+    model_path: str = "black-forest-labs/FLUX.1-Fill-dev"
+    img_width: int = 720
+    img_height: int = 720
+    guidance_scale: float = 30.0
+    num_inference_steps: int = 20
+    max_sequence_length: int = 512
     default_prompt: str = ""
 
 
