@@ -33,13 +33,13 @@ export function InpaintPromptModal({ object, onCancel, onSubmit }: InpaintPrompt
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/70 backdrop-blur-sm animate-fade-in"
       onClick={onCancel}
     >
       <form
         onSubmit={handleSubmit}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl p-5 md:p-6 space-y-4 animate-slide-up"
+        className="w-full max-w-md bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-2xl shadow-2xl p-5 md:p-6 space-y-4 animate-slide-up"
         style={{ boxShadow: `0 0 0 1px ${object.color.raw}33, 0 20px 60px rgba(0,0,0,0.5)` }}
       >
         <div className="flex items-start gap-3">
@@ -48,17 +48,17 @@ export function InpaintPromptModal({ object, onCancel, onSubmit }: InpaintPrompt
             style={{ backgroundColor: object.color.raw, boxShadow: `0 0 8px ${object.color.raw}` }}
           />
           <div className="flex-1 min-w-0">
-            <h2 className="text-base font-semibold text-zinc-100">
+            <h2 className="text-base font-semibold text-gray-900 dark:text-zinc-100">
               Replace this <span className="capitalize">{object.className}</span>
             </h2>
-            <p className="text-xs text-zinc-500 mt-0.5">
+            <p className="text-xs text-gray-400 dark:text-zinc-500 mt-0.5">
               Describe what should appear in its place.
             </p>
           </div>
           <button
             type="button"
             onClick={onCancel}
-            className="flex-shrink-0 -mt-1 -mr-1 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-md text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
+            className="flex-shrink-0 -mt-1 -mr-1 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-md text-gray-400 dark:text-zinc-500 hover:text-gray-700 dark:hover:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
             aria-label="Close"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -73,7 +73,7 @@ export function InpaintPromptModal({ object, onCancel, onSubmit }: InpaintPrompt
           onChange={(e) => setPrompt(e.target.value)}
           placeholder="e.g. a vase of red tulips on a wooden table"
           rows={3}
-          className="w-full resize-none bg-zinc-950 border border-zinc-800 focus:border-indigo-500/60 focus:ring-2 focus:ring-indigo-500/20 outline-none rounded-lg px-3 py-2.5 text-sm text-zinc-100 placeholder-zinc-600 transition-colors"
+          className="w-full resize-none bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 focus:border-indigo-400 dark:focus:border-indigo-500/60 focus:ring-2 focus:ring-indigo-500/20 outline-none rounded-lg px-3 py-2.5 text-base text-gray-900 dark:text-zinc-100 placeholder-gray-400 dark:placeholder-zinc-600 transition-colors"
           onKeyDown={(e) => {
             if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleSubmit(e);
           }}
@@ -83,14 +83,14 @@ export function InpaintPromptModal({ object, onCancel, onSubmit }: InpaintPrompt
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 min-h-[44px] px-4 py-2.5 text-sm text-zinc-400 hover:text-zinc-200 border border-zinc-700 hover:border-zinc-600 rounded-lg transition-colors"
+            className="flex-1 min-h-[44px] px-4 py-2.5 text-sm text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-200 border border-gray-200 dark:border-zinc-700 hover:border-gray-300 dark:hover:border-zinc-600 rounded-lg transition-colors"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={!canSubmit}
-            className="flex-1 min-h-[44px] flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-500 disabled:bg-zinc-700 disabled:text-zinc-500 disabled:cursor-not-allowed rounded-lg transition-all duration-150 active:scale-[0.97] shadow-lg shadow-indigo-500/20 disabled:shadow-none"
+            className="flex-1 min-h-[44px] flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-500 disabled:bg-gray-200 dark:disabled:bg-zinc-700 disabled:text-gray-400 dark:disabled:text-zinc-500 disabled:cursor-not-allowed rounded-lg transition-all duration-150 active:scale-[0.97] shadow-lg shadow-indigo-500/20 disabled:shadow-none"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z" />

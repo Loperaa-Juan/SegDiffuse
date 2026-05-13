@@ -10,20 +10,12 @@ interface ObjectPanelProps {
 
 export function ObjectPanel({ objects, selectedId, onSelect, onDeselect, onInpaint }: ObjectPanelProps) {
   const selectedObj = selectedId !== null ? objects.find((o) => o.id === selectedId) : null;
-
   return (
     <div className="flex flex-col gap-4 h-full">
-      {/* Header */}
       <div>
-        <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500 mb-1">
-          Detected objects
-        </p>
-        <p className="text-zinc-400 text-sm">
-          {objects.length} {objects.length === 1 ? 'object' : 'objects'} found
-        </p>
+        <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-zinc-500 mb-1">Detected objects</p>
+        <p className="text-gray-600 dark:text-zinc-400 text-sm">{objects.length} {objects.length === 1 ? 'object' : 'objects'} found</p>
       </div>
-
-      {/* Object list — on desktop capped at 520px; on mobile let it expand naturally */}
       <div className="flex flex-col gap-2 md:overflow-y-auto md:max-h-[520px] pr-0.5">
         {objects.map((obj) => {
           const isSelected = selectedId === obj.id;
@@ -33,51 +25,29 @@ export function ObjectPanel({ objects, selectedId, onSelect, onDeselect, onInpai
               onClick={() => (isSelected ? onDeselect() : onSelect(obj.id))}
               className={[
                 'group relative w-full flex items-center gap-3 px-3 rounded-xl text-left',
-                // min-h-[44px] satisfies iOS HIG tap target; py-3 ensures label text is comfortably padded
                 'min-h-[44px] py-3',
                 'border transition-all duration-150',
                 isSelected
-                  ? 'border-zinc-600/80 bg-zinc-800/80'
-                  : 'border-zinc-800 bg-zinc-900/60 hover:border-zinc-700 hover:bg-zinc-800/50 active:border-zinc-700 active:bg-zinc-800/50',
+                  ? 'border-gray-300/80 dark:border-zinc-600/80 bg-gray-50 dark:bg-zinc-800/80'
+                  : 'border-gray-100 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 hover:border-gray-200 dark:hover:border-zinc-700 hover:bg-gray-50 dark:hover:bg-zinc-800/50 active:border-gray-200 dark:active:border-zinc-700 active:bg-gray-50 dark:active:bg-zinc-800/50',
               ].join(' ')}
-              style={
-                isSelected
-                  ? { boxShadow: `0 0 0 1px ${obj.color.raw}44, 0 0 12px ${obj.color.raw}22` }
-                  : {}
-              }
+              style={isSelected ? { boxShadow: `0 0 0 1px ${obj.color.raw}44, 0 0 12px ${obj.color.raw}22` } : {}}
             >
-              {/* Color dot */}
               <span
                 className="flex-shrink-0 w-3 h-3 rounded-full"
-                style={{
-                  backgroundColor: obj.color.raw,
-                  boxShadow: isSelected ? `0 0 8px ${obj.color.raw}` : 'none',
-                }}
+                style={{ backgroundColor: obj.color.raw, boxShadow: isSelected ? `0 0 8px ${obj.color.raw}` : 'none' }}
               />
-
-              {/* Class name + score */}
               <div className="flex-1 min-w-0">
-                <p
-                  className={[
-                    'text-sm font-medium truncate capitalize',
-                    isSelected ? 'text-zinc-100' : 'text-zinc-300',
-                  ].join(' ')}
-                >
-                  {obj.className}
-                </p>
-                <p className="text-xs text-zinc-500">
-                  {(obj.score * 100).toFixed(1)}% confidence
-                </p>
+                <p className={[
+                  'text-sm font-medium truncate capitalize',
+                  isSelected ? 'text-gray-900 dark:text-zinc-100' : 'text-gray-700 dark:text-zinc-300',
+                ].join(' ')}>{obj.className}</p>
+                <p className="text-xs text-gray-400 dark:text-zinc-500">{(obj.score * 100).toFixed(1)}% confidence</p>
               </div>
-
-              {/* Selected badge */}
               {isSelected && (
                 <span
                   className="flex-shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded-md uppercase tracking-wider"
-                  style={{
-                    backgroundColor: `${obj.color.raw}22`,
-                    color: obj.color.raw,
-                  }}
+                  style={{ backgroundColor: `${obj.color.raw}22`, color: obj.color.raw }}
                 >
                   Selected
                 </span>
@@ -86,15 +56,10 @@ export function ObjectPanel({ objects, selectedId, onSelect, onDeselect, onInpai
           );
         })}
       </div>
-
-      {/* Selection action panel */}
       {selectedObj && (
         <div
           className="mt-auto rounded-xl border p-4 space-y-3 animate-slide-up"
-          style={{
-            borderColor: `${selectedObj.color.raw}44`,
-            backgroundColor: `${selectedObj.color.raw}0d`,
-          }}
+          style={{ borderColor: `${selectedObj.color.raw}44`, backgroundColor: `${selectedObj.color.raw}0d` }}
         >
           <div className="flex items-start gap-2">
             <span
@@ -102,15 +67,10 @@ export function ObjectPanel({ objects, selectedId, onSelect, onDeselect, onInpai
               style={{ backgroundColor: selectedObj.color.raw }}
             />
             <div>
-              <p className="text-sm font-semibold text-zinc-100 capitalize">
-                {selectedObj.className}
-              </p>
-              <p className="text-xs text-zinc-500 mt-0.5">
-                Object ID #{selectedObj.id} · {(selectedObj.score * 100).toFixed(1)}% conf.
-              </p>
+              <p className="text-sm font-semibold text-gray-900 dark:text-zinc-100 capitalize">{selectedObj.className}</p>
+              <p className="text-xs text-gray-500 dark:text-zinc-500 mt-0.5">Object ID #{selectedObj.id} · {(selectedObj.score * 100).toFixed(1)}% conf.</p>
             </div>
           </div>
-
           <button
             className="w-full flex items-center justify-center gap-2 min-h-[44px] py-2.5 px-4 rounded-lg text-sm font-medium text-white transition-all duration-150 active:scale-[0.97]"
             style={{ backgroundColor: selectedObj.color.raw }}

@@ -24,8 +24,8 @@ export function SegmentationCanvas({
 
   if (!size) {
     return (
-      <div className="flex items-center justify-center h-64 bg-zinc-900 rounded-xl">
-        <div className="w-6 h-6 border-2 border-zinc-600 border-t-indigo-400 rounded-full animate-spin" />
+      <div className="flex items-center justify-center h-64 bg-gray-100 dark:bg-zinc-900 rounded-xl">
+        <div className="w-6 h-6 border-2 border-gray-300 dark:border-zinc-600 border-t-indigo-500 rounded-full animate-spin" />
       </div>
     );
   }

@@ -14,6 +14,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3.11-dev \
     python3-pip \
     build-essential \
+    ninja-build \
     git \
     && rm -rf /var/lib/apt/lists/*
 
@@ -22,12 +23,21 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 COPY requirements.txt .
 
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir \
-        --extra-index-url https://download.pytorch.org/whl/cu121 \
-        -r requirements.txt && \
-    pip install --no-cache-dir \
-        'git+https://github.com/facebookresearch/detectron2.git'
+RUN pip install --no-cache-dir --upgrade pip
+
+
+RUN pip install --no-cache-dir \
+    --extra-index-url https://download.pytorch.org/whl/cu121 \
+    torch torchvision torchaudio
+
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+
+RUN pip install --no-cache-dir wheel setuptools && \
+    pip install --no-cache-dir --no-build-isolation 'git+https://github.com/facebookresearch/detectron2.git'
+
+    
 
 RUN find /opt/venv/lib/python3.11/site-packages -type d -name "__pycache__" -exec rm -r {} + 2>/dev/null || true && \
     find /opt/venv/lib/python3.11/site-packages -type f -name "*.pyc" -delete && \
@@ -36,7 +46,7 @@ RUN find /opt/venv/lib/python3.11/site-packages -type d -name "__pycache__" -exe
     find /opt/venv/lib/python3.11/site-packages -type d -name "test" -exec rm -r {} + 2>/dev/null || true && \
     find /opt/venv/lib/python3.11/site-packages -type d -name "*.egg-info" -exec rm -r {} + 2>/dev/null || true && \
     find /opt/venv/lib/python3.11/site-packages -type d -name "*.dist-info" -exec find {} -name "*.txt" ! -name "METADATA" ! -name "RECORD" -delete \; 2>/dev/null || true && \
-    find /opt/venv/lib/python3.11/site-packages -type f -name "*.so" -exec strip {} \; 2>/dev/null || true
+    find /opt/venv/lib/python3.11/site-packages -type f -name "*.so" -exec strip --strip-debug {} \; 2>/dev/null || true
 
 # --- Stage 2: Runtime ---
 FROM nvidia/cuda:12.1.0-cudnn8-runtime-ubuntu22.04 AS runtime

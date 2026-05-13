@@ -8,7 +8,6 @@ from config.service.settings import settings
 from diffusers import FluxFillPipeline
 from huggingface_hub import login
 from PIL import Image
-from torchao.quantization import float8_dynamic_activation_float8_weight, quantize_
 
 from src.models import InpaintingResult
 
@@ -44,20 +43,9 @@ class InpaintingEngine:
             torch_dtype=torch.bfloat16,
         ).to(device)
 
+        self._pipe.enable_xformers_memory_efficient_attention()
+
         logger.info("Pipeline ready in %.2fs", time.perf_counter() - t0)
-
-        quantize_(self._pipe.transformer, float8_dynamic_activation_float8_weight())
-        logger.info("Transformer quantized to fp8 (dynamic activation + weight)")
-
-        # Compile the transformer for faster repeated inference (CUDA graphs).
-        # The first request will be slow (~2-5 min) while the kernel is compiled;
-        # every subsequent request benefits from the cached compiled graph.
-        self._pipe.transformer = torch.compile(
-            self._pipe.transformer,
-            mode="reduce-overhead",
-            fullgraph=True,
-        )
-        logger.info("Transformer compiled with torch.compile (reduce-overhead)")
 
         self._device = device
 
