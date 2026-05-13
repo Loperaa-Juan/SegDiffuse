@@ -1,0 +1,16 @@
+torch==2.5.1+cu121
+torchvision==0.20.1+cu121
+fastapi==0.136.1
+uvicorn==0.46.0
+python-multipart==0.0.28
+starlette==1.0.0
+pydantic==2.13.4
+pydantic-settings==2.14.1
+pydantic_core==2.46.4
+annotated-types==0.7.0
+Pillow==12.2.0
+numpy==2.2.6
+opencv-python-headless==4.10.0.84
+python-dotenv==1.2.2
+requests==2.33.1
+PyYAML==6.0.3

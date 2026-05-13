@@ -6,6 +6,7 @@ import time
 import torch
 from config.service.settings import settings
 from diffusers import FluxFillPipeline
+from huggingface_hub import login
 from PIL import Image
 from torchao.quantization import float8_dynamic_activation_float8_weight, quantize_
 
@@ -17,6 +18,15 @@ logger = logging.getLogger(__name__)
 class InpaintingEngine:
     def __init__(self) -> None:
         logger.info("Initializing InpaintingEngine")
+
+        if settings.hf_token:
+            logger.info("Logging in to Hugging Face Hub")
+            login(token=settings.hf_token)
+        else:
+            logger.warning(
+                "HF_TOKEN not set — download of gated models (e.g. FLUX.1-Fill-dev) will fail"
+            )
+
         logger.info("Loading model: %s", settings.model_path)
 
         device = settings.device if torch.cuda.is_available() else "cpu"

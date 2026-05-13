@@ -8,6 +8,9 @@ class Settings(BaseSettings):
     port: int = 8080
     log_level: str = "INFO"
 
+    # Hugging Face authentication (HF_TOKEN env var)
+    hf_token: str | None = None
+
     # Inference
     device: str = "cuda:0"
     model_path: str = "black-forest-labs/FLUX.1-Fill-dev"
